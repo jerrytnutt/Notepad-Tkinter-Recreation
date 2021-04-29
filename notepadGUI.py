@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.filedialog
+from tkinter import font
 from ctypes import windll
 from datetime import datetime
 import time
@@ -207,6 +208,68 @@ class Notebook:
     
   def new_win(self):
     return create_window()
+  def rt(self):
+    print(font.families())
+    #selection = self.mylist.curselection()
+    #print(selection)
+
+  def change_display(self,event):
+    print(5)
+  
+  def set_font(self):
+    self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1,background="white")
+    self.set_font_frame.pack(anchor='center')
+    self.set_font_frame.pack_propagate(0)
+
+    
+
+    self.save_b = tk.Button(self.set_font_frame, text ="S",command=self.rt,padx=10)
+    self.save_b.pack(side='right')
+    
+    self.options_widget = tk.Frame(self.set_font_frame, height=300)
+    self.options_widget.pack(anchor='n',fill='x')
+
+    self.font_widget = tk.Frame(self.options_widget, height=300,width=300,background="blue")
+    self.font_widget.pack(side='left',padx=10)
+
+    self.font_text_label = tk.Label(self.font_widget, text="Font:",background='white')
+    self.font_text_label.pack(anchor='w')
+
+    self.style_widget = tk.Frame(self.options_widget, height=300,width=100,background="blue")
+    self.style_widget.pack(side='left',padx=10)
+    self.style_text_label = tk.Label(self.style_widget, text="Style:",background='white')
+    self.style_text_label.pack(anchor='w')
+
+    self.size_widget = tk.Frame(self.options_widget, height=300,width=100,background="blue")
+    self.size_widget.pack(side='left',padx=10)
+    self.size_text_label = tk.Label(self.size_widget, text="Size:",background='white')
+    self.size_text_label.pack(anchor='w')
+
+
+    font_family = ['Modern', 'Roman', 'Script', 'Courier', 'MS Serif', 'MS Sans Serif', 
+    'Small Fonts', 'Marlett', 'Arial',  'Calibri',  'Candara',  'Consolas', 'Constantia', 'Corbel', 'Courier New', 
+    'Ebrima', 'Franklin Gothic Medium', 'Gabriola', 'Gadugi', 'Georgia',  'Times New Roman','Impact','Broadway', 
+    'Castellar', 'Centaur', 'Century',  'Cooper Black', 'Dubai', 'Elephant', 'Forte', 'Franklin Gothic Book',
+    'Lucida Sans', 'Magneto','Mistral', 'Onyx',  'Papyrus', 'Pristina', 'Ravie', 
+    'Franklin Gothic Demi','Lucida Console']
+    font_style = ['bold','normal','italic','roman']
+    font_size = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72]
+    
+    widget_array = [[self.font_widget,font_family],[self.style_widget,font_style],[self.size_widget,font_size]]
+    for i in range(len(widget_array)):
+      scrollbar = tk.Scrollbar(widget_array[i][0])
+      scrollbar.pack(side='right',fill='y')
+      
+      mylist = tk.Listbox(widget_array[i][0],height=10,width=20, yscrollcommand = scrollbar.set )
+      mylist.bind("<Button-1>",self.change_display)
+      for line in widget_array[i][1]:
+        mylist.insert('end',str(line))
+        mylist.pack(side='right')
+      scrollbar.config( command = mylist.yview )
+
+    
+    
+    
 
   def open_new_window(self):
     self.new_window = tk.Toplevel()
@@ -216,11 +279,14 @@ class Notebook:
     
     file_menu = tk.Menu(self.top_menu,font = ( 12))
     edit_menu = tk.Menu(self.top_menu,font = ( 12))
+    self.format_menu = tk.Menu(self.top_menu,font = ( 12))
 
     self.top_menu.add_cascade(label='File',menu=file_menu)
     self.top_menu.add_cascade(label='Edit',menu=edit_menu)
+    self.top_menu.add_cascade(label='Format',menu=self.format_menu)
     file_menu['tearoff'] = 0
     edit_menu['tearoff'] = 0
+    self.format_menu['tearoff'] = 0
     
     scroll_y = tk.Scrollbar(self.new_window)
     scroll_x = tk.Scrollbar(self.new_window,orient='horizontal')
@@ -267,11 +333,14 @@ class Notebook:
     edit_menu.add_command(label='Go To...',command=self.no_length.pack)
     edit_menu.add_command(label='Select All',command=self.select_all)
     edit_menu.add_command(label='Time/Date',command=self.time_date)
+
+    self.format_menu.add_command(label='font..',command=self.set_font)
     
 
 
     root.bind('<Control-x>',self.cut)
     self.text_field.bind("<Button-1>",self.find_mouse_xy)
+    
     
    
     self.text_field.pack(expand=True, fill='both')
