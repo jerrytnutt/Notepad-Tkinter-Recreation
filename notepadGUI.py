@@ -223,8 +223,7 @@ class Notebook:
 
     
 
-    self.save_b = tk.Button(self.set_font_frame, text ="S",command=self.rt,padx=10)
-    self.save_b.pack(side='right')
+    
     
     self.options_widget = tk.Frame(self.set_font_frame, height=300)
     self.options_widget.pack(anchor='n',fill='x')
@@ -235,15 +234,25 @@ class Notebook:
     self.font_text_label = tk.Label(self.font_widget, text="Font:",background='white')
     self.font_text_label.pack(anchor='w')
 
-    self.style_widget = tk.Frame(self.options_widget, height=300,width=100,background="blue")
+    self.style_widget = tk.Frame(self.options_widget, height=300,width=120,background="blue")
     self.style_widget.pack(side='left',padx=10)
     self.style_text_label = tk.Label(self.style_widget, text="Style:",background='white')
     self.style_text_label.pack(anchor='w')
 
-    self.size_widget = tk.Frame(self.options_widget, height=300,width=100,background="blue")
+    self.size_widget = tk.Frame(self.options_widget, height=300,width=220,background="blue")
     self.size_widget.pack(side='left',padx=10)
     self.size_text_label = tk.Label(self.size_widget, text="Size:",background='white')
     self.size_text_label.pack(anchor='w')
+
+
+    self.example_text_label = tk.Label(self.set_font_frame, height=10, width=30,highlightcolor="black",text="AaBbCcDdEe")
+    self.example_text_label.configure(font=("Lucida Console", 14))
+    self.example_text_label.pack(side='right')
+
+    #self.save_b = tk.Button(self.set_font_frame, text ="S",command=self.rt,padx=10)
+    #self.save_b.pack(side='right')
+
+    
 
 
     font_family = ['Modern', 'Roman', 'Script', 'Courier', 'MS Serif', 'MS Sans Serif', 
