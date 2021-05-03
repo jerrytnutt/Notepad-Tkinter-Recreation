@@ -16,6 +16,8 @@ class Notebook:
     self.match_locations = []
     self.str_to_find = None
     self.find_direction_down = True
+    self.font = ["Lucida Console","normal", 14]
+    
     #self.wrap = True
 
   def check_text_length(self,new_file_type):
@@ -209,12 +211,29 @@ class Notebook:
   def new_win(self):
     return create_window()
   def rt(self):
-    print(font.families())
-    #selection = self.mylist.curselection()
-    #print(selection)
+   # self.example_text_label.configure(font=("Lucida Console", 14))
+   
+   if self.curr_widget:
+      selection = self.curr_widget.get(self.curr_widget.curselection())
+      if selection.isdigit():
+        selection = int(selection)
+        return self.example_text_label.configure(font=(self.font[0],selection,self.font[1]))
+      if selection[0].isupper():
+        self.font[0] = selection
+      return self.example_text_label.configure(font=(self.font[0],self.font[2],self.font[1]))
+      
+      #self.example_text_label.configure(font=(selection))
 
   def change_display(self,event):
-    print(5)
+    self.curr_widget = event.widget
+    
+   
+        
+    
+
+
+    
+    #self.example_text_label.configure(font=(font))
   
   def set_font(self):
     self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1,background="white")
@@ -245,12 +264,19 @@ class Notebook:
     self.size_text_label.pack(anchor='w')
 
 
-    self.example_text_label = tk.Label(self.set_font_frame, height=10, width=30,highlightcolor="black",text="AaBbCcDdEe")
-    self.example_text_label.configure(font=("Lucida Console", 14))
+    self.example_text_label = tk.Label(self.set_font_frame, height=5, width=20,highlightcolor="black",text="AaBbCcDdEe")
+    self.example_text_label.configure(font=("Lucida Console", 8))
     self.example_text_label.pack(side='right')
 
-    #self.save_b = tk.Button(self.set_font_frame, text ="S",command=self.rt,padx=10)
-    #self.save_b.pack(side='right')
+
+    self.bottom_widget = tk.Frame(self.set_font_frame, height=5,width=100,background="green")
+    self.bottom_widget.pack(side='left')
+
+    self.cancel_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Preview",command=self.rt,padx=10)
+    self.cancel_b.pack(side='right')
+    self.save_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Save",command=self.rt,padx=10)
+    self.save_b.pack(side='right')
+    
 
     
 
@@ -265,16 +291,18 @@ class Notebook:
     font_size = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72]
     
     widget_array = [[self.font_widget,font_family],[self.style_widget,font_style],[self.size_widget,font_size]]
+    self.listArray = [0,1,2]
     for i in range(len(widget_array)):
-      scrollbar = tk.Scrollbar(widget_array[i][0])
-      scrollbar.pack(side='right',fill='y')
+      print(i)
+      self.scrollbar = tk.Scrollbar(widget_array[i][0])
+      self.scrollbar.pack(side='right',fill='y')
       
-      mylist = tk.Listbox(widget_array[i][0],height=10,width=20, yscrollcommand = scrollbar.set )
-      mylist.bind("<Button-1>",self.change_display)
+      self.listArray[i] = tk.Listbox(widget_array[i][0],height=10,width=20, yscrollcommand = self.scrollbar.set )
+      self.listArray[i].bind("<Button-1>",self.change_display)
       for line in widget_array[i][1]:
-        mylist.insert('end',str(line))
-        mylist.pack(side='right')
-      scrollbar.config( command = mylist.yview )
+        self.listArray[i].insert('end',str(line))
+        self.listArray[i].pack(side='right')
+      self.scrollbar.config( command = self.listArray[i].yview )
 
     
     
