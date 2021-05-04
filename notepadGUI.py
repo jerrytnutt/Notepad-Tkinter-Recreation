@@ -2,6 +2,7 @@ import tkinter as tk
 import tkinter.filedialog
 from tkinter import font
 from ctypes import windll
+from sys import platform
 from datetime import datetime
 import time
 import os
@@ -16,7 +17,7 @@ class Notebook:
     self.match_locations = []
     self.str_to_find = None
     self.find_direction_down = True
-    self.font = ["Lucida Console","normal", 14]
+    self.font = ["Lucida Console",14,"normal"]
     
     #self.wrap = True
 
@@ -67,6 +68,7 @@ class Notebook:
   
   def page_setup(self):
     self.text_field.grid(row=0, column=1, padx=50, pady=50)
+
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
     self.text_field.delete("sel.first", "sel.last")
@@ -91,7 +93,7 @@ class Notebook:
   def find(self,replace=False):
     self.str_to_find = self.str_txt.get("1.0",'end-1c')
     if len(self.str_to_find) == 0:
-      return 'No text'
+      return self.str_to_find
     start_index = '1.0'
     self.match_locations = []
 
@@ -120,7 +122,6 @@ class Notebook:
     if self.str_to_find != self.str_txt.get("1.0",'end-1c') or self.match_locations == []:
       self.text_field.tag_delete('found')
       return self.find()
-    print('hey')
     num = 1
     if previous:
       if self.found_str_index == 0:
@@ -128,14 +129,8 @@ class Notebook:
       self.found_str_index -= num
     else: 
       if (self.found_str_index + 1) == len(self.match_locations):
-        #if self.wrap:
-          #self.found_str_index = -1
-        #else:
-        print('return')
         return self.cant_find_box()
       self.found_str_index += num
-    
-    print('here4')
     current_string = self.match_locations[self.found_str_index]
     self.text_field.tag_delete('found')
     self.text_field.tag_add('found', current_string[0], current_string[1])
@@ -143,32 +138,26 @@ class Notebook:
     
   def cant_find_box(self):
     try:
-      print(self.no_match_frame)
       self.no_match_frame.pack()
     except:
       self.no_match_frame = tk.Frame(self.text_field, height=100, width=150,highlightthickness=1,highlightbackground="black")
       self.no_match_frame.pack(anchor='center')
       self.no_match_frame.pack_propagate(0)
-      self.text = tk.Label(self.no_match_frame, text="Cannot find {}.".format(self.str_to_find))
+      self.text = tk.Label(self.no_match_frame, font=(18),text="Cannot find '{}'".format(self.str_to_find))
       self.text.pack(anchor='center')
-      self.ok_button = tk.Button(self.no_match_frame, text ="ok",command=self.no_match_frame.destroy)
+      self.ok_button = tk.Button(self.no_match_frame, font=(14),text ="Ok",command=self.no_match_frame.destroy)
       return self.ok_button.pack(side='top')
 
   def find_mouse_xy(self,event):
     self.row_column.pack_forget()
-    self.row_column = tk.Label(self.bottom_widget, text="{}".format(self.text_field.index('insert')),background="white")
+    current_position = self.text_field.index(tk.INSERT)
+    print(current_position)
+    insert_location = self.text_field.index('insert').split(".")
+    self.row_column = tk.Label(self.bottom_widget, text="Ln {} Col {} ".format(insert_location[0],insert_location[1]),background="white")
     self.row_column.pack(side='right')
-    print(self.text_field.index('insert'))
     self.text_field.tag_delete('found')
     self.match_locations = []
 
-  def time_date(self):
-    now = datetime.now()
-    dt_string = now.strftime("%I:%M %p %d/%m/%Y")
-    current_position = self.text_field.index(tk.INSERT)
-    self.text_field.mark_set('insert',current_position)
-    self.text_field.insert('insert', dt_string)
-  
   def go_to(self):
     length_txt = self.length_txt.get("1.0",'end-1c')
     try:
@@ -207,6 +196,13 @@ class Notebook:
   def select_all(self):
     self.text_field.tag_add('sel', "1.0", 'end-1c')
     self.text_field.mark_set('insert', "1.0")
+
+  def time_date(self):
+    time_now = datetime.now()
+    date_string = time_now.strftime("%I:%M %p %d/%m/%Y")
+    current_position = self.text_field.index(tk.INSERT)
+    self.text_field.mark_set('insert',current_position)
+    self.text_field.insert('insert', dt_string)
     
   def new_win(self):
     return create_window()
@@ -216,34 +212,23 @@ class Notebook:
    if self.curr_widget:
       selection = self.curr_widget.get(self.curr_widget.curselection())
       if selection.isdigit():
-        selection = int(selection)
-        return self.example_text_label.configure(font=(self.font[0],selection,self.font[1]))
-      if selection[0].isupper():
+        self.font[1] = int(selection)
+      elif selection[0].isupper():
         self.font[0] = selection
-      return self.example_text_label.configure(font=(self.font[0],self.font[2],self.font[1]))
+      elif selection[0].islower():
+        self.font[2] = selection
+      return self.example_text_label.configure(font=(self.font[0],self.font[1],self.font[2]))
       
       #self.example_text_label.configure(font=(selection))
 
   def change_display(self,event):
     self.curr_widget = event.widget
     
-   
-        
-    
-
-
-    
-    #self.example_text_label.configure(font=(font))
-  
   def set_font(self):
     self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1,background="white")
     self.set_font_frame.pack(anchor='center')
     self.set_font_frame.pack_propagate(0)
-
-    
-
-    
-    
+   
     self.options_widget = tk.Frame(self.set_font_frame, height=300)
     self.options_widget.pack(anchor='n',fill='x')
 
@@ -287,7 +272,7 @@ class Notebook:
     'Castellar', 'Centaur', 'Century',  'Cooper Black', 'Dubai', 'Elephant', 'Forte', 'Franklin Gothic Book',
     'Lucida Sans', 'Magneto','Mistral', 'Onyx',  'Papyrus', 'Pristina', 'Ravie', 
     'Franklin Gothic Demi','Lucida Console']
-    font_style = ['bold','normal','italic','roman']
+    font_style = ['bold','normal','italic']
     font_size = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72]
     
     widget_array = [[self.font_widget,font_family],[self.style_widget,font_style],[self.size_widget,font_size]]
@@ -304,76 +289,94 @@ class Notebook:
         self.listArray[i].pack(side='right')
       self.scrollbar.config( command = self.listArray[i].yview )
 
-    
-    
-    
-
+  def zoom(self,command=None):
+    if command == 'in':
+      print('in')
+    elif command == 'out':
+      print('out')
+    else:
+      print('reset')
+    return self.zoom_widget.pack_forget()
+  
   def open_new_window(self):
     self.new_window = tk.Toplevel()
     self.top_menu = tk.Menu(self.new_window)
     self.new_window.config(menu=self.top_menu)
     self.new_window.title('Untitled - Notepad')
     
-    file_menu = tk.Menu(self.top_menu,font = ( 12))
-    edit_menu = tk.Menu(self.top_menu,font = ( 12))
+    self.file_menu = tk.Menu(self.top_menu,font = ( 12))
+    self.edit_menu = tk.Menu(self.top_menu,font = ( 12))
     self.format_menu = tk.Menu(self.top_menu,font = ( 12))
+    self.view_menu = tk.Menu(self.top_menu,font = ( 12))
 
-    self.top_menu.add_cascade(label='File',menu=file_menu)
-    self.top_menu.add_cascade(label='Edit',menu=edit_menu)
+    self.top_menu.add_cascade(label='File',menu=self.file_menu)
+    self.top_menu.add_cascade(label='Edit',menu=self.edit_menu)
     self.top_menu.add_cascade(label='Format',menu=self.format_menu)
-    file_menu['tearoff'] = 0
-    edit_menu['tearoff'] = 0
+    self.top_menu.add_cascade(label='View',menu=self.view_menu)
+    self.file_menu['tearoff'] = 0
+    self.edit_menu['tearoff'] = 0
     self.format_menu['tearoff'] = 0
+    self.view_menu['tearoff'] = 0
     
-    scroll_y = tk.Scrollbar(self.new_window)
-    scroll_x = tk.Scrollbar(self.new_window,orient='horizontal')
+    self.scroll_y = tk.Scrollbar(self.new_window)
+    self.scroll_x = tk.Scrollbar(self.new_window,orient='horizontal')
 
     self.bottom_widget = tk.Frame(self.new_window, height=20,width=250,background="grey")
     self.bottom_widget.pack(side='bottom',fill='both')
-    self.utf_text = tk.Label(self.bottom_widget, text="UTF-8",background="white")
+    self.utf_text = tk.Label(self.bottom_widget, width=15,text="UTF-8",background="white")
     self.utf_text.pack(side='right')
-    self.crlf_text = tk.Label(self.bottom_widget, text="Windows (CRLF)",background="white")
+    self.crlf_text = tk.Label(self.bottom_widget,width=15 ,text="Windows (CRLF)",background="white")
     self.crlf_text.pack(side='right')
 
-    self.text_field = tk.Text(self.new_window,undo=True,autoseparators=True,maxundo=-1,yscrollcommand=scroll_y.set,xscrollcommand=scroll_x.set,padx=5,pady=5)
+    self.text_field = tk.Text(self.new_window,undo=True,autoseparators=True,maxundo=-1,yscrollcommand=self.scroll_y.set,xscrollcommand=self.scroll_x.set,padx=5,pady=5)
     self.text_field.configure(font=("Lucida Console", 14))
-    scroll_y.pack(side='right',fill='y')
-    scroll_y.config(command=self.text_field.yview)
-    scroll_x.pack(side='bottom',fill='x')
-    scroll_x.config(command=self.text_field.xview)
+    self.scroll_y.pack(side='right',fill='y')
+    self.scroll_y.config(command=self.text_field.yview)
+    self.scroll_x.pack(side='bottom',fill='x')
+    self.scroll_x.config(command=self.text_field.xview)
 
     self.find_frame = tk.Frame(self.text_field, height=200, width=300,highlightthickness=1,highlightbackground="black")
     self.no_length = tk.Frame(self.text_field, height=300, width=350,highlightthickness=1,highlightbackground="black")
 
-    self.row_column = tk.Label(self.bottom_widget, text="{}".format(self.text_field.index('insert')),background="white")
+    self.row_column = tk.Label(self.bottom_widget,width=10, text="{}".format(self.text_field.index('insert')), highlightbackground="red")
     self.row_column.pack(side='right')
    
-    file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.check_text_length('new'))
-    file_menu.add_command(label='New Window',command=self.new_win)
-    file_menu.add_command(label='Open...      Crtl+O',command=lambda: self.check_text_length('saved'))
-    file_menu.add_command(label='Save    Ctrl+S',command=self.save_file)
-    file_menu.add_command(label='Save as    Crtl+Shift+S',command=self.save_as_file)
-    #file_menu.add_command(label='page setip',command=self.page_setup)
-    #file_menu.add_command(label='print',command=self.setNum)
-    file_menu.add_command(label='Exit',command=self.new_window.destroy)
+    self.file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.check_text_length('new'))
+    self.file_menu.add_command(label='New Window     Crtl+Shift+S',command=self.new_win)
+    self.file_menu.add_command(label='Open...      Crtl+O',command=lambda: self.check_text_length('saved'))
+    self.file_menu.add_command(label='Save    Ctrl+S',command=self.save_file)
+    self.file_menu.add_command(label='Save as    Crtl+Shift+S',command=self.save_as_file)
+    self.file_menu.add_command(label='Exit',command=self.new_window.destroy)
     
-   
-    edit_menu.add_command(label='Undo Ctrl+Z',command=self.text_field.edit_undo,foreground="grey")
-    edit_menu.add_command(label='Cut     Ctrl+X',command=self.cut)
-    edit_menu.add_command(label='Copy   Ctrl+C',command=self.copy)
-    edit_menu.add_command(label='Paste     Ctrl+V',command=self.paste)
-    edit_menu.add_command(label='Delete      Del',command=lambda: self.text_field.delete("sel.first", "sel.last"))
-    edit_menu.add_command(label='Find...      Ctrl+F',command=self.find_frame.pack)
-    edit_menu.add_command(label='Find Next...      F3',command=self.find_next)
-    edit_menu.add_command(label='Find Previous...      Shift+F3',command=lambda: self.find_next(True))
-    edit_menu.add_command(label='replace',command=self.replace)
-    edit_menu.add_command(label='Go To...',command=self.no_length.pack)
-    edit_menu.add_command(label='Select All',command=self.select_all)
-    edit_menu.add_command(label='Time/Date',command=self.time_date)
+    self.edit_menu.add_command(label='Undo             Ctrl+Z',command=self.text_field.edit_undo)
+    self.edit_menu.add_command(label='Cut              Ctrl+X',command=self.cut)
+    self.edit_menu.add_command(label='Copy             Ctrl+C',command=self.copy)
+    self.edit_menu.add_command(label='Paste            Ctrl+V',command=self.paste)
+    self.edit_menu.add_command(label='Delete           Del',command=lambda: self.text_field.delete("sel.first", "sel.last"))
+    self.edit_menu.add_command(label='Find...          Ctrl+F',command=self.find_frame.pack)
+    self.edit_menu.add_command(label='Find Next...      F3',command=self.find_next)
+    self.edit_menu.add_command(label='Find Previous...  Shift+F3',command=lambda: self.find_next(True))
+    self.edit_menu.add_command(label='replace           Ctrl+H',command=self.replace)
+    self.edit_menu.add_command(label='Go To...          Ctrl+G',command=self.no_length.pack)
+    self.edit_menu.add_command(label='Select All        Ctrl+A',command=self.select_all)
+    self.edit_menu.add_command(label='Time/Date         F5',command=self.time_date)
 
     self.format_menu.add_command(label='font..',command=self.set_font)
     
-
+    self.view_menu.add_command(label='Zoom',command=lambda:  self.zoom_widget.pack(anchor='center'))
+    self.zoom_widget = tk.Frame(self.text_field, height=200, width=280,highlightthickness=1,background='grey')
+    self.zoom_in = tk.Button(self.zoom_widget, text = "Zoom In",command=lambda: self.zoom('in'))
+    self.zoom_in.pack(anchor='n')
+    self.zoom_out = tk.Button(self.zoom_widget, text = "Zoom Out",command=lambda: self.zoom('out'))
+    self.zoom_out.pack(anchor='n')
+    self.restore = tk.Button(self.zoom_widget, text = "Restore Default Zoom",command=self.zoom())
+    self.restore.pack(anchor='n')
+    
+ 
+   
+    
+    self.zoom_widget.pack_propagate(0)
+    self.zoom_widget.pack_forget()
 
     root.bind('<Control-x>',self.cut)
     self.text_field.bind("<Button-1>",self.find_mouse_xy)
@@ -382,64 +385,63 @@ class Notebook:
    
     self.text_field.pack(expand=True, fill='both')
 
-    self.save_option_frame = tk.Frame(self.text_field, height=200, width=280,highlightthickness=1,background="white")
+    self.save_option_frame = tk.Frame(self.text_field, height=200, width=400,highlightthickness=1,background="white")
     self.save_option_frame.pack(anchor='center')
     self.save_option_frame.pack_propagate(0)
 
-    self.top_widget = tk.Frame(self.save_option_frame, height=20,width=250,background="white")
-    self.top_widget.pack(anchor='center',fill='both')
-    self.find_text = tk.Label(self.top_widget, text="Find",background="white")
+    self.save_option_top = tk.Frame(self.save_option_frame, height=20,width=250,background="white")
+    self.save_option_top.pack(anchor='center',fill='both')
+    self.find_text = tk.Label(self.save_option_top, text="Find",font=(16),background="white",padx=10)
     self.find_text.pack(side='left')
-    self.red_xbutton = tk.Button(self.top_widget, text ="X",background="white")
-    self.red_xbutton.pack(side='right',fill='both')
+    self.save_option_x = tk.Button(self.save_option_top, text ="X",background="white")
+    self.save_option_x.pack(side='right',fill='both')
     
-    self.text = tk.Label(self.save_option_frame, text="Do you want to save changes to Untitled?",fg='blue',font = "Helvetica 10",background="white",pady=30)
-    self.text.pack(anchor='w')
+    self.save_option_text = tk.Label(self.save_option_frame, text="Do you want to save changes to Untitled?",fg='#002266',font = (16),background="white",pady=30)
+    self.save_option_text.pack(anchor='w')
     
-    self.button_widget = tk.Frame(self.save_option_frame, height=200,width=250,background="grey",pady=10,padx=5)
-    self.button_widget.pack(anchor='s',fill='both')
-    self.cancel_button = tk.Button(self.button_widget, text ="Cancel",command=self.save_option_frame.pack_forget,padx=10)
-    self.cancel_button.pack(side='right')
-    self.dontsave_button = tk.Button(self.button_widget, text ="Don't Save",command=self.dont_save_file,padx=10)
+    self.save_option_button = tk.Frame(self.save_option_frame, height=200,width=250,background="#ebebe0",pady=10,padx=5)
+    self.save_option_button.pack(anchor='s',fill='both')
+    self.save_option_cancel = tk.Button(self.save_option_button, text ="Cancel",command=self.save_option_frame.pack_forget,padx=10)
+    self.save_option_cancel.pack(side='right')
+    self.dontsave_button = tk.Button(self.save_option_button, text ="Don't Save",command=self.dont_save_file,padx=10)
     self.dontsave_button.pack(side='right')
-    self.save_button = tk.Button(self.button_widget, text ="Save",command=self.save_file,padx=10)
-    self.save_button.pack(side='right')
+    self.save_option_save = tk.Button(self.save_option_button, text ="Save",command=self.save_file,padx=10)
+    self.save_option_save.pack(side='right')
     self.save_option_frame.pack_forget()
 
-    
     self.find_frame.pack(anchor='center')
     self.find_frame.pack_propagate(0)
     self.white_widget = tk.Frame(self.find_frame, height=20,width=250,highlightthickness=1,background='white')
     self.white_widget.pack(anchor='center',fill='x')
-    self.find_text = tk.Label(self.white_widget, text="Find",background='white')
-    self.find_text.pack(side='left')
-    self.red_xbutton = tk.Button(self.white_widget, text ="X",background='white',command=self.find_next)
-    self.red_xbutton.pack(side='right',fill='both')
+    self.find_frame_text = tk.Label(self.white_widget, text="Find",background='white')
+    self.find_frame_text.pack(side='left')
+    self.find_frame_x = tk.Button(self.white_widget, text ="X",background='white',command=self.find_next)
+    self.find_frame_x.pack(side='right',fill='both')
 
-    self.find_frameFour = tk.Frame(self.find_frame, height=120, width=220,highlightthickness=1,highlightbackground="black")
-    self.find_frameFour.pack(side="left",fill='x')
-    self.find_frameFour.pack_propagate(0)
+    self.find_frame_content = tk.Frame(self.find_frame, height=120, width=220,highlightthickness=1,highlightbackground="black")
+    self.find_frame_content.pack(side="left",fill='x')
+    self.find_frame_content.pack_propagate(0)
     
-    self.find_widget = tk.Frame(self.find_frameFour, highlightbackground="black")
+    self.find_widget = tk.Frame(self.find_frame_content, highlightbackground="black")
     self.find_widget.pack(anchor='center',fill='x')
-    self.o_text = tk.Label(self.find_widget, text="Find",background='white')
-    self.o_text.pack(side='left')
-    self.str_txt = tk.Text(self.find_widget,height=1,width=140)
-    self.str_txt.pack(side='left')
+    self.find_what = tk.Label(self.find_widget, text="Find What:",background='white')
+    self.find_what.pack(side='left')
+    self.find_what_text = tk.Text(self.find_widget,height=1,width=140)
+    self.find_what_text.pack(side='left')
     
-    self.replace_widget = tk.Frame(self.find_frameFour, highlightbackground="black")
+    self.replace_widget = tk.Frame(self.find_frame_content, highlightbackground="black")
     self.replace_widget.pack(anchor='center',fill='x')
     self.f_text = tk.Label(self.replace_widget, text="Find",background='white')
     self.f_text.pack(side='left')
     self.replace_txt = tk.Text(self.replace_widget,height=1,width=40)
     self.replace_txt.pack(side='left')
 
-    text = tk.Label(self.find_frameFour, text="Direction",fg='blue',font = "Helvetica 10")
+    text = tk.Label(self.find_frame_content, text="Direction",fg='blue',font = "Helvetica 10")
     text.pack(anchor='center')
     self.v=tk.IntVar()
-    self.R1 = tk.Radiobutton(self.find_frameFour, text="Up", variable=self.v, value=1,command=lambda: self.change_find_direction(False) )
+    self.R1 = tk.Radiobutton(self.find_frame_content, text="Up", variable=self.v, value=1,command=lambda: self.change_find_direction(False) )
     self.R1.pack( anchor ='center' )
-    self.R2 = tk.Radiobutton(self.find_frameFour, text="Down", variable=self.v, value=0,command=lambda: self.change_find_direction(True))
+    self.R2 = tk.Radiobutton(self.find_frame_content, text="Down", variable=self.v, value=0,command=lambda: self.change_find_direction(True))
     self.R2.pack( anchor ='center' )
 
     
@@ -486,20 +488,35 @@ class Notebook:
 
     self.new_window.geometry('1000x500')
     
+
+
+  
+
+
+
+
     
+    
+  
 
-root = tk.Tk()
-windll.shcore.SetProcessDpiAwareness(1)
+   
+if __name__ == "__main__":
+  root = tk.Tk()
+  window_array = [] 
+  my_notebook = Notebook()
+  button_label = tk.Button(root, text='Open',font=(14),pady=10,padx=5)
+  button_label.pack(anchor='n')
+  window_array.append(my_notebook)
+  my_notebook.open_new_window()
+  if platform == 'win32':
+    windll.shcore.SetProcessDpiAwareness(1)
+  def create_window():
+    new_notebook = Notebook()
+    window_array.append(new_notebook)
+    new_notebook.open_new_window()
+  
+  
+  root.mainloop()
 
-windows = 0
-myNotebook = Notebook()
-myNotebook.open_new_window()
-def create_window():
-  global windows
-  windows += 1
-  notebookName = ('myNotebook'+str(windows) )
-  notebookName = Notebook()
-  notebookName.open_new_window()
 
-
-root.mainloop()
+ 
