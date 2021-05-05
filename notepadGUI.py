@@ -21,45 +21,45 @@ class Notebook:
     
     #self.wrap = True
 
-  def check_text_length(self,new_file_type):
+  def main_hub(self,new_file_type='Nones'):
     self.new_file_type = new_file_type
     if len( self.text_field.get("1.0",'end-1c') ) == 0:
       if new_file_type == 'saved':
         return self.open_saved_file()
-      else:
-        return self.new_window.title('Untitled')
+      return 0
     return self.save_option_frame.pack()
-    
-  def dont_save_file(self):
-    self.text_field.delete('1.0', 'end-1c')
-    self.save_option_frame.pack_forget()
-    if self.new_file_type == 'saved':
-      return self.open_saved_file()
-    self.current_file = None
-    return self.new_window.title('Untitled')
-   
+
+  def clear_text(self,option='quit'):
+    if option == 'save':
+      self.save_file()
+    if self.new_file_type == 'new':
+      self.text_field.delete('1.0', 'end-1c')
+      self.save_option_frame.pack_forget()
+      self.new_file_type = 'None'
+      return self.new_window.title('Untitled')
+    elif self.new_file_type == 'saved':
+      self.open_saved_file()
+    self.new_file_type = 'None'
+    return 'None'
+
   def open_saved_file(self):
+    self.current_file = tk.filedialog.askopenfilename(filetypes=(("Text files", "*.txt"), ("all files", "*.*")))
     self.text_field.delete('1.0', 'end-1c')
     self.save_option_frame.pack_forget()
-    self.current_file = tk.filedialog.askopenfilename(filetypes=(("Text files", "*.txt"), ("all files", "*.*")))
     self.new_window.title(os.path.basename(self.current_file))
     try:
       with open(self.current_file, 'r') as saved_file:
         self.text_field.insert('1.0', saved_file.read() )
-      self.new_file_type = 'None'
     except FileNotFoundError:
       self.new_window.title('Untitled')
       return 'File Not Found'
     return self.current_file
   
   def save_file(self):
+    print(self.current_file)
     if os.path.exists(self.current_file):
       with open(self.current_file, 'w') as curr_file:
-        curr_file.write( self.text_field.get("1.0",'end-1c') ) 
-      if self.new_file_type == 'new':
-        return self.dont_save_file()
-      elif self.new_file_type == 'saved':
-        return self.open_saved_file()
+        curr_file.write( self.text_field.get("1.0",'end-1c') )
     else:
       return self.save_as_file()
 
@@ -69,41 +69,33 @@ class Notebook:
       self.current_file = str(file_save_as.name)
       with open(self.current_file, 'w') as curr_file:
         curr_file.write( self.text_field.get("1.0",'end-1c') )
-      return self.new_window.title(os.path.basename(self.current_file))
+      self.new_window.title(os.path.basename(self.current_file))
     except AttributeError:
       return 'Attribute Error'
   
-  def page_setup(self):
-    self.text_field.grid(row=0, column=1, padx=50, pady=50)
+  
+    
 
+  #/////////////////////////////////////////////////////////////////////////
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
-    self.text_field.delete("sel.first", "sel.last")
+    return self.text_field.delete("sel.first", "sel.last")
 
   def copy(self, event=None):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
+    return self.saved_text
 
   def paste(self):
     current_position = self.text_field.index(tk.INSERT)
     self.text_field.mark_set('insert',current_position)
-    self.text_field.insert('insert', self.saved_text)
+    return self.text_field.insert('insert', self.saved_text)
   
-  def change_find_direction(self,find_direction_down):
-    if self.find_direction_down == find_direction_down:
-      return 0
-    self.find_direction_down = find_direction_down
-    found_str_index = self.match_locations[self.found_str_index]
-    self.match_locations = self.match_locations[::-1]
-    self.found_str_index = self.match_locations.index(found_str_index)
-    return self.find_direction_down
-    
   def find(self,replace=False):
     self.str_to_find = self.find_what_text.get("1.0",'end-1c')
     if len(self.str_to_find) == 0:
       return self.str_to_find
     start_index = '1.0'
     self.match_locations = []
-
     while True:
       string_location = self.text_field.search(self.str_to_find, start_index, nocase=1, stopindex='end')
       if string_location != '':
@@ -129,19 +121,28 @@ class Notebook:
     if self.str_to_find != self.find_what_text.get("1.0",'end-1c') or self.match_locations == []:
       self.text_field.tag_delete('found')
       return self.find()
-    num = 1
+    location_int = 1
     if previous:
       if self.found_str_index == 0:
         return self.cant_find_box()
-      self.found_str_index -= num
+      self.found_str_index -= location_int
     else: 
       if (self.found_str_index + 1) == len(self.match_locations):
         return self.cant_find_box()
-      self.found_str_index += num
+      self.found_str_index += location_int
     current_string = self.match_locations[self.found_str_index]
     self.text_field.tag_delete('found')
     self.text_field.tag_add('found', current_string[0], current_string[1])
     self.text_field.tag_config('found', background='blue',foreground='white')
+
+  def change_find_direction(self,find_direction_down):
+    if self.find_direction_down == find_direction_down:
+      return self.find_direction_down
+    self.find_direction_down = find_direction_down
+    found_str_index = self.match_locations[self.found_str_index]
+    self.match_locations = self.match_locations[::-1]
+    self.found_str_index = self.match_locations.index(found_str_index)
+    return self.find_direction_down
     
   def cant_find_box(self):
     try:
@@ -155,33 +156,14 @@ class Notebook:
       self.ok_button = tk.Button(self.no_match_frame, font=(14),text ="Ok",command=self.no_match_frame.destroy)
       return self.ok_button.pack(side='top')
 
-  def find_mouse_xy(self,event):
-    self.row_column.pack_forget()
+  def display_index_location(self,event):
     current_position = self.text_field.index(tk.INSERT)
-    print(current_position)
     insert_location = self.text_field.index('insert').split(".")
-    self.row_column = tk.Label(self.bottom_widget, text="Ln {} Col {} ".format(insert_location[0],insert_location[1]),background="white")
-    self.row_column.pack(side='right')
-    self.text_field.tag_delete('found')
+    self.row_column.config( text="Ln {} Col {} ".format(insert_location[0],insert_location[1]))
     self.match_locations = []
-
-  def go_to(self):
-    length_txt = self.length_txt.get("1.0",'end-1c')
-    try:
-      length_txt = float(length_txt)
-    except:
-      return 'Enter a number'
-    max_row = self.text_field.index('end') 
-    max_row = (float(max_row) - 1.0)
-    row_number = length_txt
-    if float(row_number) > float(max_row):
-      return None
-   #self.text_field.mark_set('insert',row_number)
-    #self.no_length.pack_forget()
-    self.text_field.mark_set("insert", '2.0')
-    self.text_field.insert('insert', 't')
-
-  def replace(self,all=False):
+    return self.text_field.tag_delete('found')
+  
+  def replace_found_str(self,all=False):
     if self.match_locations == []:
       return self.find()
     if all:
@@ -189,34 +171,29 @@ class Notebook:
       while (self.found_str_index + 1) != len(self.match_locations):
         current_string = self.match_locations[self.found_str_index]
         self.text_field.delete(current_string[0], current_string[1])
-        replacement_string = self.replace_txt.get("1.0",'end-1c')
-        self.text_field.insert(current_string[0], replacement_string)
+        self.text_field.insert(current_string[0], self.replace_txt.get("1.0",'end-1c'))
         self.match_locations = self.find()
-      
-        
     current_string = self.match_locations[self.found_str_index]
     self.text_field.delete(current_string[0], current_string[1])
-    replacement_string = self.replace_txt.get("1.0",'end-1c')
-    self.text_field.insert(current_string[0], replacement_string)
-    return 0
+    self.text_field.insert(current_string[0], self.replace_txt.get("1.0",'end-1c'))
+    return self.match_locations
  
   def select_all(self):
     self.text_field.tag_add('sel', "1.0", 'end-1c')
-    self.text_field.mark_set('insert', "1.0")
+    return self.text_field.mark_set('insert', "1.0")
 
   def time_date(self):
     time_now = datetime.now()
     date_string = time_now.strftime("%I:%M %p %d/%m/%Y")
     current_position = self.text_field.index(tk.INSERT)
     self.text_field.mark_set('insert',current_position)
-    self.text_field.insert('insert', dt_string)
-    
-  def new_win(self):
-    return create_window()
-  def rt(self):
-   # self.example_text_label.configure(font=("Lucida Console", 14))
-   
-   if self.curr_widget:
+    return self.text_field.insert('insert', date_string)
+
+  def change_display(self,event):
+    self.curr_widget = event.widget
+  
+  def change_font(self,font_change='current'):
+    if self.curr_widget:
       selection = self.curr_widget.get(self.curr_widget.curselection())
       if selection.isdigit():
         self.font[1] = int(selection)
@@ -224,13 +201,10 @@ class Notebook:
         self.font[0] = selection
       elif selection[0].islower():
         self.font[2] = selection
+      if font_change == 'current':
+        return self.text_field.configure(font=(self.font[0],self.font[1],self.font[2])
       return self.example_text_label.configure(font=(self.font[0],self.font[1],self.font[2]))
-      
-      #self.example_text_label.configure(font=(selection))
 
-  def change_display(self,event):
-    self.curr_widget = event.widget
-    
   def set_font(self):
     self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1,background="white")
     self.set_font_frame.pack(anchor='center')
@@ -264,9 +238,9 @@ class Notebook:
     self.bottom_widget = tk.Frame(self.set_font_frame, height=5,width=100,background="green")
     self.bottom_widget.pack(side='left')
 
-    self.cancel_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Preview",command=self.rt,padx=10)
+    self.cancel_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Preview",command=lambda: self.change_font('preview'),padx=10)
     self.cancel_b.pack(side='right')
-    self.save_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Save",command=self.rt,padx=10)
+    self.save_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Save",command=self.change_font,padx=10)
     self.save_b.pack(side='right')
     
 
@@ -345,12 +319,12 @@ class Notebook:
     self.find_frame = tk.Frame(self.text_field, height=200, width=300,highlightthickness=1,highlightbackground="black")
     self.no_length = tk.Frame(self.text_field, height=300, width=350,highlightthickness=1,highlightbackground="black")
 
-    self.row_column = tk.Label(self.bottom_widget,width=10, text="{}".format(self.text_field.index('insert')), highlightbackground="red")
+    self.row_column = tk.Label(self.bottom_widget,width=10, text="Ln {} Col {} ".format(0,0),background="white")
     self.row_column.pack(side='right')
    
-    self.file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.check_text_length('new'))
+    self.file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.main_hub('new'))
     self.file_menu.add_command(label='New Window     Crtl+Shift+S',command=self.new_win)
-    self.file_menu.add_command(label='Open...      Crtl+O',command=lambda: self.check_text_length('saved'))
+    self.file_menu.add_command(label='Open...      Crtl+O',command=lambda: self.main_hub('saved'))
     self.file_menu.add_command(label='Save    Ctrl+S',command=self.save_file)
     self.file_menu.add_command(label='Save as    Crtl+Shift+S',command=self.save_as_file)
     self.file_menu.add_command(label='Exit',command=self.new_window.destroy)
@@ -363,8 +337,7 @@ class Notebook:
     self.edit_menu.add_command(label='Find...          Ctrl+F',command=self.find_frame.pack)
     self.edit_menu.add_command(label='Find Next...      F3',command=self.find_next)
     self.edit_menu.add_command(label='Find Previous...  Shift+F3',command=lambda: self.find_next(True))
-    self.edit_menu.add_command(label='replace           Ctrl+H',command=self.replace)
-    self.edit_menu.add_command(label='Go To...          Ctrl+G',command=self.no_length.pack)
+    self.edit_menu.add_command(label='Replace           Ctrl+H',command=self.replace_found_str)
     self.edit_menu.add_command(label='Select All        Ctrl+A',command=self.select_all)
     self.edit_menu.add_command(label='Time/Date         F5',command=self.time_date)
 
@@ -386,7 +359,7 @@ class Notebook:
     self.zoom_widget.pack_forget()
 
     root.bind('<Control-x>',self.cut)
-    self.text_field.bind("<Button-1>",self.find_mouse_xy)
+    self.text_field.bind("<Button-1>",self.display_index_location)
     
     
    
@@ -410,9 +383,9 @@ class Notebook:
     self.save_option_button.pack(anchor='s',fill='both')
     self.save_option_cancel = tk.Button(self.save_option_button, text ="Cancel",command=self.save_option_frame.pack_forget,padx=10)
     self.save_option_cancel.pack(side='right')
-    self.dontsave_button = tk.Button(self.save_option_button, text ="Don't Save",command=self.dont_save_file,padx=10)
+    self.dontsave_button = tk.Button(self.save_option_button, text ="Don't Save",command=self.clear_text,padx=10)
     self.dontsave_button.pack(side='right')
-    self.save_option_save = tk.Button(self.save_option_button, text ="Save",command=self.save_file,padx=10)
+    self.save_option_save = tk.Button(self.save_option_button, text ="Save",command=lambda: self.clear_text('save'),padx=10)
     self.save_option_save.pack(side='right')
     self.save_option_frame.pack_forget()
 
@@ -457,9 +430,9 @@ class Notebook:
 
     self.find_next_button = tk.Button(self.find_frame_right, text ="Find Next",command=self.find_next)
     self.find_next_button.pack(side='top')
-    self.replace_button = tk.Button(self.find_frame_right, text ="Replace",command=self.replace)
+    self.replace_button = tk.Button(self.find_frame_right, text ="Replace..",command=self.replace_found_str)
     self.replace_button.pack(side='top')
-    self.replace_all_button = tk.Button(self.find_frame_right, text ="Replace All",command=lambda: self.replace(True))
+    self.replace_all_button = tk.Button(self.find_frame_right, text ="Replace All",command=lambda: self.replace_found_str(True))
     self.replace_all_button.pack(side="top")
     self.cancel_find_button = tk.Button(self.find_frame_right, text ="Cancel",command=self.find_frame.pack_forget)
     self.cancel_find_button.pack(side="top")
@@ -482,10 +455,7 @@ class Notebook:
     self.length_txt.pack(anchor='w')
     
 
-    self.cancel_go_to = tk.Button(self.no_length, text ="Cancel",command=self.no_length.pack_forget,padx=10)
-    self.cancel_go_to.pack(side='right')
-    self.go_to_button = tk.Button(self.no_length, text ="Go To",command=self.go_to,padx=10)
-    self.go_to_button.pack(side='right')
+    
     
 
     self.no_length.pack_forget()
