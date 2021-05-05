@@ -4,8 +4,8 @@ from tkinter import font
 from ctypes import windll
 from sys import platform
 from datetime import datetime
-import time
-import os
+import time, os
+
 
 class Notebook:
   
@@ -27,7 +27,7 @@ class Notebook:
       if new_file_type == 'saved':
         return self.open_saved_file()
       else:
-        return new_file_type
+        return self.new_window.title('Untitled')
     return self.save_option_frame.pack()
     
   def dont_save_file(self):
@@ -39,11 +39,14 @@ class Notebook:
     return self.new_window.title('Untitled')
    
   def open_saved_file(self):
+    self.text_field.delete('1.0', 'end-1c')
+    self.save_option_frame.pack_forget()
     self.current_file = tk.filedialog.askopenfilename(filetypes=(("Text files", "*.txt"), ("all files", "*.*")))
     self.new_window.title(os.path.basename(self.current_file))
     try:
       with open(self.current_file, 'r') as saved_file:
         self.text_field.insert('1.0', saved_file.read() )
+      self.new_file_type = 'None'
     except FileNotFoundError:
       self.new_window.title('Untitled')
       return 'File Not Found'
@@ -53,6 +56,10 @@ class Notebook:
     if os.path.exists(self.current_file):
       with open(self.current_file, 'w') as curr_file:
         curr_file.write( self.text_field.get("1.0",'end-1c') ) 
+      if self.new_file_type == 'new':
+        return self.dont_save_file()
+      elif self.new_file_type == 'saved':
+        return self.open_saved_file()
     else:
       return self.save_as_file()
 
@@ -62,7 +69,7 @@ class Notebook:
       self.current_file = str(file_save_as.name)
       with open(self.current_file, 'w') as curr_file:
         curr_file.write( self.text_field.get("1.0",'end-1c') )
-      return current_file
+      return self.new_window.title(os.path.basename(self.current_file))
     except AttributeError:
       return 'Attribute Error'
   
@@ -91,7 +98,7 @@ class Notebook:
     return self.find_direction_down
     
   def find(self,replace=False):
-    self.str_to_find = self.str_txt.get("1.0",'end-1c')
+    self.str_to_find = self.find_what_text.get("1.0",'end-1c')
     if len(self.str_to_find) == 0:
       return self.str_to_find
     start_index = '1.0'
@@ -119,7 +126,7 @@ class Notebook:
     return self.match_locations
 
   def find_next(self,previous=False):
-    if self.str_to_find != self.str_txt.get("1.0",'end-1c') or self.match_locations == []:
+    if self.str_to_find != self.find_what_text.get("1.0",'end-1c') or self.match_locations == []:
       self.text_field.tag_delete('found')
       return self.find()
     num = 1
@@ -411,14 +418,14 @@ class Notebook:
 
     self.find_frame.pack(anchor='center')
     self.find_frame.pack_propagate(0)
-    self.white_widget = tk.Frame(self.find_frame, height=20,width=250,highlightthickness=1,background='white')
+    self.white_widget = tk.Frame(self.find_frame, height=20,width=250,background='white')
     self.white_widget.pack(anchor='center',fill='x')
     self.find_frame_text = tk.Label(self.white_widget, text="Find",background='white')
     self.find_frame_text.pack(side='left')
     self.find_frame_x = tk.Button(self.white_widget, text ="X",background='white',command=self.find_next)
     self.find_frame_x.pack(side='right',fill='both')
 
-    self.find_frame_content = tk.Frame(self.find_frame, height=120, width=220,highlightthickness=1,highlightbackground="black")
+    self.find_frame_content = tk.Frame(self.find_frame, height=120, width=220)
     self.find_frame_content.pack(side="left",fill='x')
     self.find_frame_content.pack_propagate(0)
     
@@ -431,32 +438,30 @@ class Notebook:
     
     self.replace_widget = tk.Frame(self.find_frame_content, highlightbackground="black")
     self.replace_widget.pack(anchor='center',fill='x')
-    self.f_text = tk.Label(self.replace_widget, text="Find",background='white')
-    self.f_text.pack(side='left')
+    self.replace = tk.Label(self.replace_widget, text="Replace: ",background='white')
+    self.replace.pack(side='left')
     self.replace_txt = tk.Text(self.replace_widget,height=1,width=40)
     self.replace_txt.pack(side='left')
 
-    text = tk.Label(self.find_frame_content, text="Direction",fg='blue',font = "Helvetica 10")
-    text.pack(anchor='center')
-    self.v=tk.IntVar()
-    self.R1 = tk.Radiobutton(self.find_frame_content, text="Up", variable=self.v, value=1,command=lambda: self.change_find_direction(False) )
+    self.direction = tk.Label(self.find_frame_content, text="Direction",font =(10))
+    self.direction.pack(anchor='center')
+    self.radio_variable=tk.IntVar()
+    self.R1 = tk.Radiobutton(self.find_frame_content, text="Up", variable=self.radio_variable, value=1,command=lambda: self.change_find_direction(False) )
     self.R1.pack( anchor ='center' )
-    self.R2 = tk.Radiobutton(self.find_frame_content, text="Down", variable=self.v, value=0,command=lambda: self.change_find_direction(True))
+    self.R2 = tk.Radiobutton(self.find_frame_content, text="Down", variable=self.radio_variable, value=0,command=lambda: self.change_find_direction(True))
     self.R2.pack( anchor ='center' )
 
-    
-    
-    self.find_frame_right = tk.Frame(self.find_frame, height=120, width=80,highlightthickness=1,highlightbackground="black")
+    self.find_frame_right = tk.Frame(self.find_frame, height=120, width=80)
     self.find_frame_right.pack(side="right")
     self.find_frame_right.pack_propagate(0)
 
-    self.text_button = tk.Button(self.find_frame_right, text ="Find Next",command=self.find_next)
-    self.text_button.pack(side='top')
-    self.replace_button = tk.Button(self.find_frame_right, text ="replace",command=self.replace)
+    self.find_next_button = tk.Button(self.find_frame_right, text ="Find Next",command=self.find_next)
+    self.find_next_button.pack(side='top')
+    self.replace_button = tk.Button(self.find_frame_right, text ="Replace",command=self.replace)
     self.replace_button.pack(side='top')
-    self.replace_all_button = tk.Button(self.find_frame_right, text ="replace All",command=lambda: self.replace(True))
+    self.replace_all_button = tk.Button(self.find_frame_right, text ="Replace All",command=lambda: self.replace(True))
     self.replace_all_button.pack(side="top")
-    self.cancel_find_button = tk.Button(self.find_frame_right, text ="cancel",command=self.find_frame.pack_forget)
+    self.cancel_find_button = tk.Button(self.find_frame_right, text ="Cancel",command=self.find_frame.pack_forget)
     self.cancel_find_button.pack(side="top")
 
 
@@ -488,18 +493,6 @@ class Notebook:
 
     self.new_window.geometry('1000x500')
     
-
-
-  
-
-
-
-
-    
-    
-  
-
-   
 if __name__ == "__main__":
   root = tk.Tk()
   window_array = [] 
