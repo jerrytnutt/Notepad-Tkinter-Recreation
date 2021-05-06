@@ -6,21 +6,23 @@ from sys import platform
 from datetime import datetime
 import time, os
 
-
+#what did i learn fro, this project
 class Notebook:
   
   def __init__(self):
     self.windows = 0
-    self.current_file = "None"
+    self.current_file = "Untitled"
     self.new_file_type = None
     self.found_str_index = 0
     self.match_locations = []
     self.str_to_find = None
     self.find_direction_down = True
+    self.zoom_level = 100
     self.font = ["Lucida Console",14,"normal"]
+    self.bottom_widget_id = True
+    self.scroll_x_id = True
+    self.scroll_x = True
     
-    #self.wrap = True
-
   def main_hub(self,new_file_type='Nones'):
     self.new_file_type = new_file_type
     if len( self.text_field.get("1.0",'end-1c') ) == 0:
@@ -73,9 +75,6 @@ class Notebook:
     except AttributeError:
       return 'Attribute Error'
   
-  
-    
-
   #/////////////////////////////////////////////////////////////////////////
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
@@ -191,6 +190,9 @@ class Notebook:
 
   def change_display(self,event):
     self.curr_widget = event.widget
+
+  def new_win(self):
+    return create_window()
   
   def change_font(self,font_change='current'):
     if self.curr_widget:
@@ -201,52 +203,46 @@ class Notebook:
         self.font[0] = selection
       elif selection[0].islower():
         self.font[2] = selection
-      if font_change == 'current':
-        return self.text_field.configure(font=(self.font[0],self.font[1],self.font[2])
-      return self.example_text_label.configure(font=(self.font[0],self.font[1],self.font[2]))
-
+    if font_change == 'current':
+      return self.text_field.configure(font=(self.font[0],self.font[1],self.font[2]))
+    return self.example_text_label.configure(font=(self.font[0],self.font[1],self.font[2]))
+  
   def set_font(self):
-    self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1,background="white")
+    self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=12,background="white")
     self.set_font_frame.pack(anchor='center')
     self.set_font_frame.pack_propagate(0)
    
     self.options_widget = tk.Frame(self.set_font_frame, height=300)
     self.options_widget.pack(anchor='n',fill='x')
 
-    self.font_widget = tk.Frame(self.options_widget, height=300,width=300,background="blue")
+    self.font_widget = tk.Frame(self.options_widget, height=300,width=300)
     self.font_widget.pack(side='left',padx=10)
 
     self.font_text_label = tk.Label(self.font_widget, text="Font:",background='white')
     self.font_text_label.pack(anchor='w')
 
-    self.style_widget = tk.Frame(self.options_widget, height=300,width=120,background="blue")
+    self.style_widget = tk.Frame(self.options_widget, height=300,width=120,background="white")
     self.style_widget.pack(side='left',padx=10)
     self.style_text_label = tk.Label(self.style_widget, text="Style:",background='white')
     self.style_text_label.pack(anchor='w')
 
-    self.size_widget = tk.Frame(self.options_widget, height=300,width=220,background="blue")
+    self.size_widget = tk.Frame(self.options_widget, height=300,width=220,background="white")
     self.size_widget.pack(side='left',padx=10)
     self.size_text_label = tk.Label(self.size_widget, text="Size:",background='white')
     self.size_text_label.pack(anchor='w')
-
 
     self.example_text_label = tk.Label(self.set_font_frame, height=5, width=20,highlightcolor="black",text="AaBbCcDdEe")
     self.example_text_label.configure(font=("Lucida Console", 8))
     self.example_text_label.pack(side='right')
 
+    self.font_save_widget = tk.Frame(self.set_font_frame, height=5,width=100)
+    self.font_save_widget.pack(side='left')
 
-    self.bottom_widget = tk.Frame(self.set_font_frame, height=5,width=100,background="green")
-    self.bottom_widget.pack(side='left')
-
-    self.cancel_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Preview",command=lambda: self.change_font('preview'),padx=10)
+    self.cancel_b = tk.Button(self.font_save_widget,height=3,width=10, text ="Preview",command=lambda: self.change_font('preview'),padx=10)
     self.cancel_b.pack(side='right')
-    self.save_b = tk.Button(self.bottom_widget,height=3,width=10, text ="Save",command=self.change_font,padx=10)
+    self.save_b = tk.Button(self.font_save_widget,height=3,width=10, text ="Save",command=self.change_font,padx=10)
     self.save_b.pack(side='right')
     
-
-    
-
-
     font_family = ['Modern', 'Roman', 'Script', 'Courier', 'MS Serif', 'MS Sans Serif', 
     'Small Fonts', 'Marlett', 'Arial',  'Calibri',  'Candara',  'Consolas', 'Constantia', 'Corbel', 'Courier New', 
     'Ebrima', 'Franklin Gothic Medium', 'Gabriola', 'Gadugi', 'Georgia',  'Times New Roman','Impact','Broadway', 
@@ -259,7 +255,6 @@ class Notebook:
     widget_array = [[self.font_widget,font_family],[self.style_widget,font_style],[self.size_widget,font_size]]
     self.listArray = [0,1,2]
     for i in range(len(widget_array)):
-      print(i)
       self.scrollbar = tk.Scrollbar(widget_array[i][0])
       self.scrollbar.pack(side='right',fill='y')
       
@@ -272,23 +267,42 @@ class Notebook:
 
   def zoom(self,command=None):
     if command == 'in':
-      print('in')
+      self.font[1] = self.font[1] + 4
+      self.zoom_level = self.zoom_level + 10
     elif command == 'out':
-      print('out')
+      self.font[1] = self.font[1] - 4
+      self.zoom_level = self.zoom_level - 10
     else:
-      print('reset')
+      self.font[1] = 14
+      self.zoom_level = 100
+    self.text_field.configure(font=(self.font[0],self.font[1],self.font[2]))
+    self.zoom_number_widget.config(text=self.zoom_level)
     return self.zoom_widget.pack_forget()
+  def change_status_bar(self):
+    if self.bottom_widget_id.winfo_ismapped() == 1:
+      return self.bottom_widget_id.pack_forget()
+    self.scroll_x.pack_forget()
+    self.scroll_one()
+    self.scroll_x.pack(side='bottom',fill='x')
+    self.scroll_x.config(command=self.text_field.xview)
+
   
   def open_new_window(self):
     self.new_window = tk.Toplevel()
     self.top_menu = tk.Menu(self.new_window)
     self.new_window.config(menu=self.top_menu)
     self.new_window.title('Untitled - Notepad')
+
+    def doSomething():
+      self.new_window.destroy()
+      return check_for()
+
+    self.new_window.protocol("WM_DELETE_WINDOW", doSomething)
     
-    self.file_menu = tk.Menu(self.top_menu,font = ( 12))
-    self.edit_menu = tk.Menu(self.top_menu,font = ( 12))
-    self.format_menu = tk.Menu(self.top_menu,font = ( 12))
-    self.view_menu = tk.Menu(self.top_menu,font = ( 12))
+    self.file_menu = tk.Menu(self.top_menu,font = (12))
+    self.edit_menu = tk.Menu(self.top_menu,font = (12))
+    self.format_menu = tk.Menu(self.top_menu,font = (12))
+    self.view_menu = tk.Menu(self.top_menu,font = (12))
 
     self.top_menu.add_cascade(label='File',menu=self.file_menu)
     self.top_menu.add_cascade(label='Edit',menu=self.edit_menu)
@@ -301,26 +315,33 @@ class Notebook:
     
     self.scroll_y = tk.Scrollbar(self.new_window)
     self.scroll_x = tk.Scrollbar(self.new_window,orient='horizontal')
-
-    self.bottom_widget = tk.Frame(self.new_window, height=20,width=250,background="grey")
-    self.bottom_widget.pack(side='bottom',fill='both')
-    self.utf_text = tk.Label(self.bottom_widget, width=15,text="UTF-8",background="white")
-    self.utf_text.pack(side='right')
-    self.crlf_text = tk.Label(self.bottom_widget,width=15 ,text="Windows (CRLF)",background="white")
-    self.crlf_text.pack(side='right')
-
+    
+    def scroll():
+      self.bottom_widget = tk.Frame(self.new_window, height=20,width=250)
+      self.bottom_widget.pack(side='bottom',fill='both')
+      self.bottom_widget_id = self.bottom_widget
+      self.utf_text = tk.Label(self.bottom_widget, width=15,text="UTF-8",background="white")
+      self.utf_text.pack(side='right')
+      self.crlf_text = tk.Label(self.bottom_widget,width=15 ,text="Windows (CRLF)",background="white")
+      self.crlf_text.pack(side='right')
+      self.zoom_number_widget = tk.Label(self.bottom_widget,width=15 ,text=self.zoom_level,background="white")
+      self.zoom_number_widget.pack(side='right')
+      self.row_column = tk.Label(self.bottom_widget,width=10, text="Ln {} Col {} ".format(0,0),background="white")
+      self.row_column.pack(side='right')
+    self.scroll_one = scroll
+    self.scroll_one()
     self.text_field = tk.Text(self.new_window,undo=True,autoseparators=True,maxundo=-1,yscrollcommand=self.scroll_y.set,xscrollcommand=self.scroll_x.set,padx=5,pady=5)
     self.text_field.configure(font=("Lucida Console", 14))
     self.scroll_y.pack(side='right',fill='y')
     self.scroll_y.config(command=self.text_field.yview)
     self.scroll_x.pack(side='bottom',fill='x')
     self.scroll_x.config(command=self.text_field.xview)
+    
 
     self.find_frame = tk.Frame(self.text_field, height=200, width=300,highlightthickness=1,highlightbackground="black")
     self.no_length = tk.Frame(self.text_field, height=300, width=350,highlightthickness=1,highlightbackground="black")
 
-    self.row_column = tk.Label(self.bottom_widget,width=10, text="Ln {} Col {} ".format(0,0),background="white")
-    self.row_column.pack(side='right')
+    
    
     self.file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.main_hub('new'))
     self.file_menu.add_command(label='New Window     Crtl+Shift+S',command=self.new_win)
@@ -343,26 +364,23 @@ class Notebook:
 
     self.format_menu.add_command(label='font..',command=self.set_font)
     
+    
     self.view_menu.add_command(label='Zoom',command=lambda:  self.zoom_widget.pack(anchor='center'))
+    self.view_menu.add_command(label='Status Bar',command=self.change_status_bar)
+
     self.zoom_widget = tk.Frame(self.text_field, height=200, width=280,highlightthickness=1,background='grey')
     self.zoom_in = tk.Button(self.zoom_widget, text = "Zoom In",command=lambda: self.zoom('in'))
     self.zoom_in.pack(anchor='n')
     self.zoom_out = tk.Button(self.zoom_widget, text = "Zoom Out",command=lambda: self.zoom('out'))
     self.zoom_out.pack(anchor='n')
-    self.restore = tk.Button(self.zoom_widget, text = "Restore Default Zoom",command=self.zoom())
+    self.restore = tk.Button(self.zoom_widget, text = "Restore Default Zoom",command=self.zoom)
     self.restore.pack(anchor='n')
-    
- 
-   
-    
     self.zoom_widget.pack_propagate(0)
     self.zoom_widget.pack_forget()
 
     root.bind('<Control-x>',self.cut)
     self.text_field.bind("<Button-1>",self.display_index_location)
     
-    
-   
     self.text_field.pack(expand=True, fill='both')
 
     self.save_option_frame = tk.Frame(self.text_field, height=200, width=400,highlightthickness=1,background="white")
@@ -373,10 +391,9 @@ class Notebook:
     self.save_option_top.pack(anchor='center',fill='both')
     self.find_text = tk.Label(self.save_option_top, text="Find",font=(16),background="white",padx=10)
     self.find_text.pack(side='left')
-    self.save_option_x = tk.Button(self.save_option_top, text ="X",background="white")
+    self.save_option_x = tk.Button(self.save_option_top, text ="X",background="red",command=self.save_option_frame.pack_forget)
     self.save_option_x.pack(side='right',fill='both')
-    
-    self.save_option_text = tk.Label(self.save_option_frame, text="Do you want to save changes to Untitled?",fg='#002266',font = (16),background="white",pady=30)
+    self.save_option_text = tk.Label(self.save_option_frame, text="Do you want to save changes to {}?".format(self.current_file),fg='#002266',font = (16),background="white",pady=30)
     self.save_option_text.pack(anchor='w')
     
     self.save_option_button = tk.Frame(self.save_option_frame, height=200,width=250,background="#ebebe0",pady=10,padx=5)
@@ -395,13 +412,13 @@ class Notebook:
     self.white_widget.pack(anchor='center',fill='x')
     self.find_frame_text = tk.Label(self.white_widget, text="Find",background='white')
     self.find_frame_text.pack(side='left')
-    self.find_frame_x = tk.Button(self.white_widget, text ="X",background='white',command=self.find_next)
+    self.find_frame_x = tk.Button(self.white_widget, text ="X",background='red',command=self.find_frame.pack_forget)
     self.find_frame_x.pack(side='right',fill='both')
 
     self.find_frame_content = tk.Frame(self.find_frame, height=120, width=220)
     self.find_frame_content.pack(side="left",fill='x')
     self.find_frame_content.pack_propagate(0)
-    
+    #highlightbackground="black"
     self.find_widget = tk.Frame(self.find_frame_content, highlightbackground="black")
     self.find_widget.pack(anchor='center',fill='x')
     self.find_what = tk.Label(self.find_widget, text="Find What:",background='white')
@@ -411,8 +428,8 @@ class Notebook:
     
     self.replace_widget = tk.Frame(self.find_frame_content, highlightbackground="black")
     self.replace_widget.pack(anchor='center',fill='x')
-    self.replace = tk.Label(self.replace_widget, text="Replace: ",background='white')
-    self.replace.pack(side='left')
+    self.replace_label = tk.Label(self.replace_widget, text="Replace:    ",background='white')
+    self.replace_label.pack(side='left')
     self.replace_txt = tk.Text(self.replace_widget,height=1,width=40)
     self.replace_txt.pack(side='left')
 
@@ -437,36 +454,37 @@ class Notebook:
     self.cancel_find_button = tk.Button(self.find_frame_right, text ="Cancel",command=self.find_frame.pack_forget)
     self.cancel_find_button.pack(side="top")
 
-
     self.find_frame_left = tk.Frame(self.find_frame, height=100, width=80,highlightthickness=1,highlightbackground="black")
     self.find_frame_left.pack(side="bottom")
     self.find_frame_left.pack_propagate(0)
-    
     self.find_frame.pack_forget()
-
-    
     self.no_length.pack(anchor='center')
     self.no_length.pack_propagate(0)
-
     self.text_length = tk.Label(self.no_length , text="Line Number")
     self.text_length.pack(anchor='w')
-
     self.length_txt = tk.Text(self.no_length,height=5,width=10)
     self.length_txt.pack(anchor='w')
-    
-
-    
-    
-
     self.no_length.pack_forget()
     
 
     self.new_window.geometry('1000x500')
-    
+
+
+def check_for():
+  for i in window_array:
+    if i.new_window.winfo_exists() == 1:
+      return True
+    return root.destroy() 
 if __name__ == "__main__":
   root = tk.Tk()
+  
+
+  
+  
   window_array = [] 
+  
   my_notebook = Notebook()
+  
   button_label = tk.Button(root, text='Open',font=(14),pady=10,padx=5)
   button_label.pack(anchor='n')
   window_array.append(my_notebook)
@@ -477,8 +495,6 @@ if __name__ == "__main__":
     new_notebook = Notebook()
     window_array.append(new_notebook)
     new_notebook.open_new_window()
-  
-  
   root.mainloop()
 
 
