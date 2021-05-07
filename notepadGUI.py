@@ -6,7 +6,7 @@ from sys import platform
 from datetime import datetime
 import time, os
 
-#what did i learn fro, this project
+#What have I learned so far- write.
 class Notebook:
   
   def __init__(self):
