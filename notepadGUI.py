@@ -1,11 +1,8 @@
 import tkinter as tk
-import tkinter.filedialog
-from tkinter import font
 from ctypes import windll
 from sys import platform
 from datetime import datetime
-import time, os
-
+import os
 
 class Notebook:
   
@@ -13,16 +10,17 @@ class Notebook:
     self.windows = 0
     self.current_file = "Untitled"
     self.new_file_type = None
+    self.save_option_text = None
     self.found_str_index = 0
     self.match_locations = []
     self.str_to_find = None
     self.find_direction_down = True
     self.zoom_level = 100
     self.font = ["Lucida Console",14,"normal"]
-    self.bottom_widget_id = True
-    self.scroll_x_id = True
-    self.scroll_x = True
-    self.save_option_text = True
+    self.change_edit_color = None
+    self.bottom_widget_id = None
+    self.scroll_x = None
+    
     
   def open_new_file(self,new_file_type=None):
     self.new_file_type = new_file_type
@@ -81,12 +79,13 @@ class Notebook:
   def exit(self):
     self.new_window.destroy()
     return check_for_windows()  
+
   # Edit Menu
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
     self.text_field.delete("sel.first", "sel.last")
     if len(self.text_field.get("1.0",'end-1c')) == 0:
-      self.edit_menu.entryconfig(0, foreground='grey')
+      return self.change_edit_color('grey')
 
   def copy(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
@@ -164,12 +163,10 @@ class Notebook:
       return self.ok_button.pack(side='top')
 
   def display_index_location(self,event):
-    current_position = self.text_field.index(tk.INSERT)
+   # current_position = self.text_field.index(tk.INSERT)
     insert_location = self.text_field.index('insert').split(".")
     self.row_column.config( text="Ln {} Col {} ".format(insert_location[0],insert_location[1]))
     self.match_locations = []
-    length = self.text_field.get("1.0",'end-1c')
-    print(len(length))
     return self.text_field.tag_delete('found')
 
   def replace_found_str(self,all=False):
@@ -284,6 +281,7 @@ class Notebook:
         self.listArray[i].insert('end',str(line))
         self.listArray[i].pack(side='right')
       self.scrollbar.config( command = self.listArray[i].yview )
+
   # View Menu
   def zoom(self,command=None):
     if command == 'in':
@@ -386,21 +384,24 @@ class Notebook:
     self.view_menu.add_command(label='Zoom Out',command=lambda: self.zoom('out'))
     self.view_menu.add_command(label='Restore Default Zoom',command=self.zoom)
     self.view_menu.add_command(label='Status Bar',command=self.change_status_bar)
+    
+    def change_edit_color(color):
+      for i in [0,5,6,7,8]:
+        self.edit_menu.entryconfig(i, foreground=color)
+    change_edit_color('grey')
 
-    self.edit_menu.entryconfig(0, foreground='grey')
     def PressAnyKey(label):
-      self.edit_menu.entryconfig(0, foreground='black')
+      return change_edit_color('black')
       
-
+      
     def Press(l):
       if len(self.text_field.get("1.0",'end-1c')) <= 1:
-        self.edit_menu.entryconfig(0, foreground='grey')
+        return change_edit_color('grey')
     
     
     self.text_field.bind('<Key>', lambda i : PressAnyKey(i))
     self.text_field.bind("<BackSpace>", Press)
     self.new_window.bind('<Control-n>',self.open_new_file('new'))
-    #root.bind('<Control-x>',self.cut)
     self.text_field.bind("<Button-1>",self.display_index_location)
     self.edit_menu.bind("<Button-1>",Press)
     
@@ -489,10 +490,10 @@ class Notebook:
     self.no_length.pack_forget()
     self.new_window.geometry('1000x500')
 
-sam = 'k'
+
 def check_for_windows():
-  for i in window_array:
-    if i.new_window.winfo_exists() == 1:
+  for window in window_array:
+    if window.new_window.winfo_exists() == 1:
       return True
     return root.destroy() 
 if __name__ == "__main__":
