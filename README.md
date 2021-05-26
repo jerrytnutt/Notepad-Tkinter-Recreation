@@ -1,6 +1,8 @@
-# Notepad-Tkinter-Recreation
-Program will attempt a complete recreation of Microsoft Notepad with Tkinter with all the features included.
-
-The File and Edit menu along with the basic look have been completed.
-
-Still need to add a Format, View and Help menu and fix a few bugs.
+Notepad-Tkinter-Recreation
+This Program will attempt a complete recreation of Microsoft Notepad with Tkinter with all the features included.
+Features Included
+The ability to save, update, open and create new text files.
+The ability to find and replace certain strings and letters in the text was created from scratch.
+Select/All and Time and Date Features
+Formate Menu give the user the ability to edit and preview the font style, size, and type.
+Zoom in and out and the ability to remove the status bar.

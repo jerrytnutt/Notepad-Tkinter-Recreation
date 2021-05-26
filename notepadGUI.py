@@ -502,7 +502,7 @@ if __name__ == "__main__":
   window_array = [] 
   root.withdraw()
   my_notebook = Notebook()
-  
+  print(5)
   button_label = tk.Button(root, text='Open',font=(14),pady=10,padx=5)
   button_label.pack(anchor='n')
   window_array.append(my_notebook)
