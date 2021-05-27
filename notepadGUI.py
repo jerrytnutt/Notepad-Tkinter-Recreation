@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import filedialog
 from ctypes import windll
 from sys import platform
 from datetime import datetime
@@ -39,7 +40,7 @@ class Notebook:
       self.text_field.delete('1.0', 'end-1c')
       self.save_option_frame.pack_forget()
       self.new_file_type = None
-      self.edit_menu.entryconfig(0, foreground='grey')
+      self.current_file = 'Untitled'
       return self.new_window.title('Untitled')
     elif self.new_file_type == 'saved':
       self.open_saved_file()
@@ -60,6 +61,7 @@ class Notebook:
     return self.current_file
   
   def save_file(self):
+    print(self.current_file)
     if os.path.exists(self.current_file):
       with open(self.current_file, 'w') as curr_file:
         curr_file.write( self.text_field.get("1.0",'end-1c') )
@@ -77,15 +79,18 @@ class Notebook:
       return 'Attribute Error'
       
   def exit(self):
+    print(6)
     self.new_window.destroy()
+    window_array.pop()
+    
+    print(len(window_array))
     return check_for_windows()  
 
   # Edit Menu
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
     self.text_field.delete("sel.first", "sel.last")
-    if len(self.text_field.get("1.0",'end-1c')) == 0:
-      return self.change_edit_color('grey')
+    return self.saved_text
 
   def copy(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
@@ -115,7 +120,7 @@ class Notebook:
         break
    
     if self.match_locations == []:
-      return self.cant_find_box()
+      return self.not_found_widget()
     
     self.found_str_index = 0
     current_string = self.match_locations[0]
@@ -130,16 +135,17 @@ class Notebook:
     location_int = 1
     if previous:
       if self.found_str_index == 0:
-        return self.cant_find_box()
+        return self.not_found_widget()
       self.found_str_index -= location_int
     else: 
       if (self.found_str_index + 1) == len(self.match_locations):
-        return self.cant_find_box()
+        return self.not_found_widget()
       self.found_str_index += location_int
     current_string = self.match_locations[self.found_str_index]
     self.text_field.tag_delete('found')
     self.text_field.tag_add('found', current_string[0], current_string[1])
     self.text_field.tag_config('found', background='blue',foreground='white')
+    return self.text_field
 
   def change_find_direction(self,find_direction_down):
     if self.find_direction_down == find_direction_down:
@@ -150,7 +156,7 @@ class Notebook:
     self.found_str_index = self.match_locations.index(found_str_index)
     return self.find_direction_down
     
-  def cant_find_box(self):
+  def not_found_widget(self):
     try:
       self.no_match_frame.pack()
     except:
@@ -163,7 +169,6 @@ class Notebook:
       return self.ok_button.pack(side='top')
 
   def display_index_location(self,event):
-   # current_position = self.text_field.index(tk.INSERT)
     insert_location = self.text_field.index('insert').split(".")
     self.row_column.config( text="Ln {} Col {} ".format(insert_location[0],insert_location[1]))
     self.match_locations = []
@@ -215,7 +220,7 @@ class Notebook:
       return self.text_field.configure(font=(self.font[0],self.font[1],self.font[2]))
     return self.example_text_label.configure(font=(self.font[0],self.font[1],self.font[2]))
   
-  def set_font(self):
+  def create_font_widget(self):
     self.set_font_frame = tk.Frame(self.text_field, height=500, width=550,highlightthickness=1)
     self.set_font_frame.pack(anchor='center')
     self.set_font_frame.pack_propagate(0)
@@ -269,18 +274,18 @@ class Notebook:
     font_size = [8,9,10,11,12,14,16,18,20,22,24,26,28,36]
     
     widget_array = [[self.font_widget,font_family],[self.style_widget,font_style],[self.size_widget,font_size]]
-    self.listArray = [0,1,2]
+    self.font_type_array = [0,1,2]
     for i in range(len(widget_array)):
       self.scrollbar = tk.Scrollbar(widget_array[i][0])
       self.scrollbar.pack(side='right',fill='y')
       
-      self.listArray[i] = tk.Listbox(widget_array[i][0],height=10,width=15, yscrollcommand = self.scrollbar.set )
-      self.listArray[i].configure(font=(8))
-      self.listArray[i].bind("<Button-1>",self.change_display)
+      self.font_type_array[i] = tk.Listbox(widget_array[i][0],height=10,width=15, yscrollcommand = self.scrollbar.set )
+      self.font_type_array[i].configure(font=(8))
+      self.font_type_array[i].bind("<Button-1>",self.change_display)
       for line in widget_array[i][1]:
-        self.listArray[i].insert('end',str(line))
-        self.listArray[i].pack(side='right')
-      self.scrollbar.config( command = self.listArray[i].yview )
+        self.font_type_array[i].insert('end',str(line))
+        self.font_type_array[i].pack(side='right')
+      self.scrollbar.config( command = self.font_type_array[i].yview )
 
   # View Menu
   def zoom(self,command=None):
@@ -303,8 +308,9 @@ class Notebook:
     self.scroll_one()
     self.scroll_x.pack(side='bottom',fill='x')
     self.scroll_x.config(command=self.text_field.xview)
-    return 0
-
+    return self.bottom_widget_id
+    
+  # Function to create and open a new window
   def open_new_window(self):
     self.new_window = tk.Toplevel()
     self.top_menu = tk.Menu(self.new_window)
@@ -314,6 +320,7 @@ class Notebook:
 
     def delete_window():
       self.new_window.destroy()
+      window_array.pop()
       return check_for_windows()
 
     self.new_window.protocol("WM_DELETE_WINDOW", delete_window)
@@ -359,51 +366,31 @@ class Notebook:
     self.find_frame = tk.Frame(self.text_field, height=200, width=300,highlightthickness=1,highlightbackground="black")
     self.no_length = tk.Frame(self.text_field, height=300, width=350,highlightthickness=1,highlightbackground="black")
 
-    self.file_menu.add_command(label='New..       Ctrl+N',command=lambda: self.open_new_file('new'))
-    self.file_menu.add_command(label='New Window     Crtl+Shift+S',command=self.create_new_window)
-    self.file_menu.add_command(label='Open...      Crtl+O',command=lambda: self.open_new_file('saved'))
-    self.file_menu.add_command(label='Save    Ctrl+S',command=self.save_file)
-    self.file_menu.add_command(label='Save as    Crtl+Shift+S',command=self.save_as_file)
+    self.file_menu.add_command(label='New',command=lambda: self.open_new_file('new'))
+    self.file_menu.add_command(label='New Window',command=self.create_new_window)
+    self.file_menu.add_command(label='Open',command=lambda: self.open_new_file('saved'))
+    self.file_menu.add_command(label='Save',command=self.save_file)
+    self.file_menu.add_command(label='Save as',command=self.save_as_file)
     self.file_menu.add_command(label='Exit',command=self.exit)
     
-    self.edit_menu.add_command(label='Undo             Ctrl+Z',command=self.text_field.edit_undo)
-    self.edit_menu.add_command(label='Cut              Ctrl+X',command=self.cut)
-    self.edit_menu.add_command(label='Copy             Ctrl+C',command=self.copy)
-    self.edit_menu.add_command(label='Paste            Ctrl+V',command=self.paste)
-    self.edit_menu.add_command(label='Delete           Del',command=lambda: self.text_field.delete("sel.first", "sel.last"))
-    self.edit_menu.add_command(label='Find...          Ctrl+F',command=self.find_frame.pack)
-    self.edit_menu.add_command(label='Find Next...      F3',command=self.find_next)
-    self.edit_menu.add_command(label='Find Previous...  Shift+F3',command=lambda: self.find_next(True))
-    self.edit_menu.add_command(label='Replace           Ctrl+H',command=self.replace_found_str)
-    self.edit_menu.add_command(label='Select All        Ctrl+A',command=self.select_all)
-    self.edit_menu.add_command(label='Time/Date         F5',command=self.time_date)
+    self.edit_menu.add_command(label='Undo',command=self.text_field.edit_undo)
+    self.edit_menu.add_command(label='Cut',command=self.cut)
+    self.edit_menu.add_command(label='Copy',command=self.copy)
+    self.edit_menu.add_command(label='Paste',command=self.paste)
+    self.edit_menu.add_command(label='Delete',command=lambda: self.text_field.delete("sel.first", "sel.last"))
+    self.edit_menu.add_command(label='Find...',command=self.find_frame.pack)
+    self.edit_menu.add_command(label='Find Next...',command=self.find_next)
+    self.edit_menu.add_command(label='Find Previous...',command=lambda: self.find_next(True))
+    self.edit_menu.add_command(label='Replace',command=self.replace_found_str)
+    self.edit_menu.add_command(label='Select All',command=self.select_all)
+    self.edit_menu.add_command(label='Time/Date',command=self.time_date)
 
-    self.format_menu.add_command(label='font..',command=self.set_font)
+    self.format_menu.add_command(label='font..',command=self.create_font_widget)
     
     self.view_menu.add_command(label='Zoom In',command=lambda: self.zoom('in'))
     self.view_menu.add_command(label='Zoom Out',command=lambda: self.zoom('out'))
     self.view_menu.add_command(label='Restore Default Zoom',command=self.zoom)
     self.view_menu.add_command(label='Status Bar',command=self.change_status_bar)
-    
-    def change_edit_color(color):
-      for i in [0,5,6,7,8]:
-        self.edit_menu.entryconfig(i, foreground=color)
-    change_edit_color('grey')
-
-    def PressAnyKey(label):
-      return change_edit_color('black')
-      
-      
-    def Press(l):
-      if len(self.text_field.get("1.0",'end-1c')) <= 1:
-        return change_edit_color('grey')
-    
-    
-    self.text_field.bind('<Key>', lambda i : PressAnyKey(i))
-    self.text_field.bind("<BackSpace>", Press)
-    self.new_window.bind('<Control-n>',self.open_new_file('new'))
-    self.text_field.bind("<Button-1>",self.display_index_location)
-    self.edit_menu.bind("<Button-1>",Press)
     
     self.text_field.pack(expand=True, fill='both')
 
@@ -491,26 +478,22 @@ class Notebook:
     self.new_window.geometry('1000x500')
 
 
+window_array = [] 
+def create_window():
+    new_notebook = Notebook()
+    window_array.append(new_notebook)
+    new_notebook.open_new_window()
+
 def check_for_windows():
-  for window in window_array:
-    if window.new_window.winfo_exists() == 1:
-      return True
+  if len(window_array) == 0:
     return root.destroy() 
+
 if __name__ == "__main__":
   root = tk.Tk()
-  root.iconbitmap(r"images/favicon.ico")
-  window_array = [] 
   root.withdraw()
   my_notebook = Notebook()
-  print(5)
-  button_label = tk.Button(root, text='Open',font=(14),pady=10,padx=5)
-  button_label.pack(anchor='n')
   window_array.append(my_notebook)
   my_notebook.open_new_window()
   if platform == 'win32':
     windll.shcore.SetProcessDpiAwareness(1)
-  def create_window():
-    new_notebook = Notebook()
-    window_array.append(new_notebook)
-    new_notebook.open_new_window()
   root.mainloop() 
