@@ -11,3 +11,11 @@ This Program will attempt a complete recreation of Microsoft Notepad with Tkinte
 - Zoom in and out and the ability to remove the status bar.
 - Multiple windows can be opened and used simultaneously.
 - Program is complete, might return later if I find any issues or want to add new features.
+
+# Getting Started
+To run the application simply run the python file. Run the following line in the working directory:
+
+> python notepadGUI.py
+
+# License
+Notepad Tkinter Recreation uses the MIT License.
