@@ -22,7 +22,7 @@ class Notebook:
     self.bottom_widget_id = None
     self.scroll_x = None
     
-    
+   # ----------------------------------File Menu--------------------------------------------- 
   def open_new_file(self,new_file_type=None):
     self.new_file_type = new_file_type
     if len( self.text_field.get("1.0",'end-1c') ) == 0:
@@ -79,14 +79,11 @@ class Notebook:
       return 'Attribute Error'
       
   def exit(self):
-    print(6)
     self.new_window.destroy()
     window_array.pop()
-    
-    print(len(window_array))
     return check_for_windows()  
 
-  # Edit Menu
+  # ----------------------------------Edit Menu---------------------------------------------
   def cut(self):
     self.saved_text = self.text_field.get("sel.first", "sel.last")
     self.text_field.delete("sel.first", "sel.last")
@@ -200,7 +197,7 @@ class Notebook:
     self.text_field.mark_set('insert',current_position)
     return self.text_field.insert('insert', date_string)
 
-  # Font Menu
+  # -----------------------------------Font Menu----------------------------------------------
   def create_new_window(self):
     return create_window()
 
@@ -287,7 +284,7 @@ class Notebook:
         self.font_type_array[i].pack(side='right')
       self.scrollbar.config( command = self.font_type_array[i].yview )
 
-  # View Menu
+  # ----------------------------------------View Menu--------------------------------------------
   def zoom(self,command=None):
     if command == 'in':
       self.font[1] = self.font[1] + 4

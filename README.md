@@ -1,7 +1,7 @@
 # Notepad-Tkinter-Recreation
 This Program will attempt a complete recreation of Microsoft Notepad with Tkinter with all the features included.
 
-<img src='./images/ntk.png'><img>
+<img src='./images/notepad.png'><img>
 
 # Features Included
 - The ability to save, open update, and create new text files.
